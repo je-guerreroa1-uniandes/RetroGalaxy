@@ -3,11 +3,13 @@ import json
 import pygame
 import esper
 
-from src.create.prefab_creator import create_square, create_player
+from src.create.prefab_creator import create_square, create_player, create_input_player
+from src.ecs.components.c_input_command import CInputCommand, CommandPhase
 from src.ecs.components.c_surface import CSurface
 from src.ecs.components.c_transform import CTransform
 from src.ecs.components.c_velocity import CVelocity
 from src.ecs.systems.s_animation import system_animation
+from src.ecs.systems.s_input_player import system_input_player
 from src.ecs.systems.s_movement import system_movement
 from src.ecs.systems.s_rendering import system_rendering
 
@@ -64,6 +66,7 @@ class GameEngine:
         self.player_c_vel = self.ecs_world.component_for_entity(self.player_entity, CVelocity)
         self.player_c_t = self.ecs_world.component_for_entity(self.player_entity, CTransform)
         self.player_c_s = self.ecs_world.component_for_entity(self.player_entity, CSurface)
+        create_input_player(self.ecs_world)
 
 
     def _calculate_time(self):
@@ -72,6 +75,10 @@ class GameEngine:
 
     def _process_events(self):
         for event in pygame.event.get():
+            if event.type in [pygame.KEYDOWN, pygame.KEYUP]:
+                print(
+                    f"Key event detected: {pygame.key.name(event.key)} - {'Pressed' if event.type == pygame.KEYDOWN else 'Released'}")
+            system_input_player(self.ecs_world, event, self._do_action)
             if event.type == pygame.QUIT:
                 self.is_running = False
 
@@ -88,10 +95,33 @@ class GameEngine:
     def _clean(self):
         pygame.quit()
 
-    def _do_animation_finish(self, entity_id: int):
-        # if self.ecs_world.has_component(entity_id, CExplosionState):
-        #     exp_st = self.ecs_world.component_for_entity(entity_id, CExplosionState)
-        #     exp_st.state = ExplosionState.ELIMINATE
-        pass
+    def _do_action(self, c_input: CInputCommand):
+        print(f"Action Triggered: {c_input.name}, Phase: {c_input.phase}")
+        if c_input.name == "PLAYER_LEFT":
+            if c_input.phase == CommandPhase.START:
+                self.player_c_vel.vel.x -= self.player_cfg.get("input_velocity")
+            elif c_input.phase == CommandPhase.END:
+                self.player_c_vel.vel.x += self.player_cfg.get("input_velocity")
+
+        if c_input.name == "PLAYER_RIGHT":
+            if c_input.phase == CommandPhase.START:
+                self.player_c_vel.vel.x += self.player_cfg.get("input_velocity")
+            elif c_input.phase == CommandPhase.END:
+                self.player_c_vel.vel.x -= self.player_cfg.get("input_velocity")
+
+        if c_input.name == "PLAYER_UP":
+            if c_input.phase == CommandPhase.START:
+                self.player_c_vel.vel.y -= self.player_cfg.get("input_velocity")
+            elif c_input.phase == CommandPhase.END:
+                self.player_c_vel.vel.y += self.player_cfg.get("input_velocity")
+
+        if c_input.name == "PLAYER_DOWN":
+            if c_input.phase == CommandPhase.START:
+                self.player_c_vel.vel.y += self.player_cfg.get("input_velocity")
+            elif c_input.phase == CommandPhase.END:
+                self.player_c_vel.vel.y -= self.player_cfg.get("input_velocity")
+
+        if c_input.name == "PLAYER_FIRE":
+            print("Player fired")
 
 
