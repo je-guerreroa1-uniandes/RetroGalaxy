@@ -3,45 +3,44 @@ import json
 import pygame
 import esper
 
-
-#from src.create.prefab_creator import crear_cuadrado
-
-from src.create.prefab_creator import crear_texto, create_input_player
-from src.ecs.components.c_input_command import CInputCommand, CommandPhase
+from src.create.prefab_creator import create_square, create_player
 from src.ecs.components.c_surface import CSurface
 from src.ecs.components.c_transform import CTransform
 from src.ecs.components.c_velocity import CVelocity
-
-
-from src.ecs.systems.s_input_player import system_input_player
+from src.ecs.systems.s_animation import system_animation
+from src.ecs.systems.s_movement import system_movement
 from src.ecs.systems.s_rendering import system_rendering
+
 
 class GameEngine:
     def __init__(self) -> None:
-        self.is_running = False
+        self._load_config_files()
+
         pygame.init()
-
-        self.load_data()
-
-        self.screen = pygame.display.set_mode((self.window_data["size"]["w"], self.window_data["size"]["h"]), 0)
-        pygame.display.set_caption(self.window_data["title"])
+        pygame.display.set_caption(self.window_cfg["title"])
+        self.screen = pygame.display.set_mode(
+            (self.window_cfg["size"]["w"], self.window_cfg["size"]["h"]),
+            pygame.SCALED)
 
         self.clock = pygame.time.Clock()
-        self.framerate = self.window_data["framerate"]
+        self.is_running = False
+        self.framerate = self.window_cfg["framerate"]
         self.delta_time = 0
-
+        self.bg_color = pygame.Color(self.window_cfg["bg_color"]["r"],
+                                     self.window_cfg["bg_color"]["g"],
+                                     self.window_cfg["bg_color"]["b"])
         self.ecs_world = esper.World()
 
         
 
         
-    def load_data(self):
-        f1 = open("assets/cfg/window.json")
-        self.window_data = json.load(f1)
-        f1.close()
-
-        # cargar demas elementos
-
+    def _load_config_files(self):
+        with open("assets/cfg/window.json", encoding="utf-8") as window_file:
+            self.window_cfg = json.load(window_file)
+        with open("assets/cfg/player.json") as player_file:
+            self.player_cfg = json.load(player_file)
+        with open("assets/cfg/level_01_cfg.json") as level_01_file:
+            self.level_01_cfg = json.load(level_01_file)
         
 
     async def run(self) -> None:
@@ -55,72 +54,44 @@ class GameEngine:
             await asyncio.sleep(0)
         self._clean()
 
-
     def _create(self):
+        create_square(self.ecs_world,
+                      pygame.Vector2(50, 50),
+                      pygame.Vector2(150, 100),
+                      pygame.Vector2(-100, 200),
+                      pygame.Color(255, 255, 100))
+        self.player_entity = create_player(self.ecs_world, self.player_cfg, self.level_01_cfg.get("player_spawn"), self.screen)
+        self.player_c_vel = self.ecs_world.component_for_entity(self.player_entity, CVelocity)
+        self.player_c_t = self.ecs_world.component_for_entity(self.player_entity, CTransform)
+        self.player_c_s = self.ecs_world.component_for_entity(self.player_entity, CSurface)
 
-        # crear jugador, datos ...
-        create_input_player(self.ecs_world)
-        
-        # crear textos de pantalla
-
-        self.is_paused = False
-        self.paused_text = None
-
-
-        
 
     def _calculate_time(self):
         self.clock.tick(self.framerate)
         self.delta_time = self.clock.get_time() / 1000.0
 
-
     def _process_events(self):
         for event in pygame.event.get():
-            system_input_player(self.ecs_world, event, self._do_action)
             if event.type == pygame.QUIT:
                 self.is_running = False
 
-
     def _update(self):
-
-
-
-        if not self.is_paused:
-
-            #systems
-
-            pass
-
+        system_movement(self.ecs_world, self.delta_time)
+        system_animation(self.ecs_world, self.delta_time)
         self.ecs_world._clear_dead_entities()
 
-
     def _draw(self):
-
-        self.screen.fill((self.window_data["bg_color"]["r"], self.window_data["bg_color"]["g"], self.window_data["bg_color"]["b"]))
-
+        self.screen.fill(self.bg_color)
         system_rendering(self.ecs_world, self.screen)
-
         pygame.display.flip()
 
-
     def _clean(self):
-        self.ecs_world.clear_database()
         pygame.quit()
 
+    def _do_animation_finish(self, entity_id: int):
+        # if self.ecs_world.has_component(entity_id, CExplosionState):
+        #     exp_st = self.ecs_world.component_for_entity(entity_id, CExplosionState)
+        #     exp_st.state = ExplosionState.ELIMINATE
+        pass
 
-    def _do_action(self, c_input: CInputCommand):
 
-        # inputs del jugador
-
-        if c_input.name == "PAUSE":
-            if c_input.phase == CommandPhase.START:
-                if self.is_paused:
-                    self.is_paused = False
-                    self.ecs_world.delete_entity(self.paused_text)
-                else:
-                    self.is_paused = True
-                    self.paused_text = crear_texto(self.ecs_world, "PAUSED", 
-                                                   pygame.Vector2(self.level_data["player_spawn"]["position"]["x"] , self.level_data["player_spawn"]["position"]["y"]), 
-                            pygame.Color(255,255,255), 20)
-            
-        

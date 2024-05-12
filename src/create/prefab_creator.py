@@ -15,6 +15,15 @@ from src.engine.service_locator import ServiceLocator
 
 
 #NA
+def create_square(ecs_world:esper.World, size:pygame.Vector2,
+                    pos:pygame.Vector2, vel:pygame.Vector2, col:pygame.Color):
+    cuad_entity = ecs_world.create_entity()
+    ecs_world.add_component(cuad_entity,
+                CSurface(size, col))
+    ecs_world.add_component(cuad_entity,
+                CTransform(pos))
+    ecs_world.add_component(cuad_entity,
+                CVelocity(vel))
 def crear_cuadrado(ecs_world:esper.World, size:pygame.Vector2, pos:pygame.Vector2, 
                    vel:pygame.Vector2, col:pygame.Color) -> int:
     
@@ -68,6 +77,34 @@ def create_explosion(ecs_world:esper.World, pos:pygame.Vector2, explotion_data:d
     ServiceLocator.sounds_service.play(explotion_data["sound"])
 
     return explotion_entity
+
+def create_player(world: esper.World, player_info: dict, player_lvl_info: dict, screen:pygame.Surface) -> int:
+    player_sprite = ServiceLocator.images_service.get(player_info["image"])
+    size = player_sprite.get_size()
+    size = (size[0] / player_info["animations"]["number_frames"], size[1])
+    if player_lvl_info.get("use_default", False):
+        pos = pygame.Vector2(
+            (screen.get_width() / 2) - (size[0] / 2),
+            screen.get_height() - size[1] - 10
+        )
+    else:
+        pos = pygame.Vector2(
+            player_lvl_info["position"]["x"] - (size[0] / 2),
+            player_lvl_info["position"]["y"] - (size[1] / 2)
+        )
+
+    vel = pygame.Vector2(0, 0)
+
+    player_entity = create_sprite(world,
+                                  pos,
+                                  vel,
+                                  player_sprite
+                                  )
+
+    world.add_component(player_entity, CTagPlayer())
+    # world.add_component(player_entity, CAnimation(player_info["animations"]))
+    world.add_component(player_entity, CPlayerState())
+    return player_entity
 
 def create_input_player(ecs_world:esper.World) -> dict:
 
