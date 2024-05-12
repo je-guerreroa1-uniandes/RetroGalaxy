@@ -106,13 +106,19 @@ def create_player(world: esper.World, player_info: dict, player_lvl_info: dict, 
     world.add_component(player_entity, CPlayerState())
     return player_entity
 
-def create_input_player(ecs_world:esper.World) -> dict:
-
-    input_pause = ecs_world.create_entity()
-
-
-
-    ecs_world.add_component(input_pause, CInputCommand("PAUSE", pygame.K_p))
+def create_input_player(world: esper.World):
+    input_left = world.create_entity()
+    input_right = world.create_entity()
+    input_up = world.create_entity()
+    input_down = world.create_entity()
+    input_fire = world.create_entity()
+    input_pause = world.create_entity()
+    world.add_component(input_left, CInputCommand("PLAYER_LEFT", pygame.K_LEFT))
+    world.add_component(input_right, CInputCommand("PLAYER_RIGHT", pygame.K_RIGHT))
+    world.add_component(input_up, CInputCommand("PLAYER_UP", pygame.K_UP))
+    world.add_component(input_down, CInputCommand("PLAYER_DOWN", pygame.K_DOWN))
+    world.add_component(input_fire, CInputCommand("PLAYER_FIRE", pygame.K_SPACE))
+    world.add_component(input_pause, CInputCommand("PAUSE", pygame.K_p))
 
 
 def create_bullet_square(ecs_world:esper.World, bullet_data:dict, player_entity:int, level_data:dict) -> int:
