@@ -1,5 +1,6 @@
-# PLANTILLA PROYECTO - SEMANA 01
-Esta plantilla contiene la estructura básica para comenzar los video-series de la semana 1 de "introeucción al desarrollo de videojuegos con ECS"
+# Retro Galaxy
 
+## Integrantes
 
-Link a itch.io: https://the4thwall.itch.io/s4-iadv-dbm?secret=Upui0eGN4Xt3t6ULPJIPnTkqtkI
+* David Burgos
+* John Guerrero je.guerreroa1@uniandes.edu.co 202210180
