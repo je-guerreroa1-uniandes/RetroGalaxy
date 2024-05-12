@@ -1,0 +1,15 @@
+{
+  "message": {
+    "un_paused": "'P' to pause",
+    "paused": "PAUSE"
+  },
+  "font": {
+    "path": "assets/fnt/PressStart2P.ttf",
+    "size": 8,
+    "color": {
+      "r": 222,
+      "g": 40,
+      "b": 0
+    }
+  }
+}
