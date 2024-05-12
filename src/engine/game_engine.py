@@ -3,7 +3,11 @@ import json
 import pygame
 import esper
 
-from src.create.prefab_creator import create_square
+from src.create.prefab_creator import create_square, create_player
+from src.ecs.components.c_surface import CSurface
+from src.ecs.components.c_transform import CTransform
+from src.ecs.components.c_velocity import CVelocity
+from src.ecs.systems.s_animation import system_animation
 from src.ecs.systems.s_movement import system_movement
 from src.ecs.systems.s_rendering import system_rendering
 
@@ -27,12 +31,17 @@ class GameEngine:
                                      self.window_cfg["bg_color"]["b"])
         self.ecs_world = esper.World()
 
-        # Original framerate = 0
-        # Original bg_color (0, 200, 128)
+        
 
+        
     def _load_config_files(self):
         with open("assets/cfg/window.json", encoding="utf-8") as window_file:
             self.window_cfg = json.load(window_file)
+        with open("assets/cfg/player.json") as player_file:
+            self.player_cfg = json.load(player_file)
+        with open("assets/cfg/level_01_cfg.json") as level_01_file:
+            self.level_01_cfg = json.load(level_01_file)
+        
 
     async def run(self) -> None:
         self._create()
@@ -51,6 +60,11 @@ class GameEngine:
                       pygame.Vector2(150, 100),
                       pygame.Vector2(-100, 200),
                       pygame.Color(255, 255, 100))
+        self.player_entity = create_player(self.ecs_world, self.player_cfg, self.level_01_cfg.get("player_spawn"), self.screen)
+        self.player_c_vel = self.ecs_world.component_for_entity(self.player_entity, CVelocity)
+        self.player_c_t = self.ecs_world.component_for_entity(self.player_entity, CTransform)
+        self.player_c_s = self.ecs_world.component_for_entity(self.player_entity, CSurface)
+
 
     def _calculate_time(self):
         self.clock.tick(self.framerate)
@@ -63,6 +77,8 @@ class GameEngine:
 
     def _update(self):
         system_movement(self.ecs_world, self.delta_time)
+        system_animation(self.ecs_world, self.delta_time)
+        self.ecs_world._clear_dead_entities()
 
     def _draw(self):
         self.screen.fill(self.bg_color)
@@ -71,5 +87,11 @@ class GameEngine:
 
     def _clean(self):
         pygame.quit()
+
+    def _do_animation_finish(self, entity_id: int):
+        # if self.ecs_world.has_component(entity_id, CExplosionState):
+        #     exp_st = self.ecs_world.component_for_entity(entity_id, CExplosionState)
+        #     exp_st.state = ExplosionState.ELIMINATE
+        pass
 
 
