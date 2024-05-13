@@ -1,0 +1,21 @@
+{
+    "velocity_player": 200,
+    "velocity_enemy": 50,
+    "player_max_bullets": 1,
+    "enemy_max_bullets": 10,
+    "size": {
+        "w": 1,
+        "h": 5
+    },
+    "color_player": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+    },
+    "color_enemy": {
+        "r": 237,
+        "g": 187,
+        "b": 24
+    },
+    "sound": "assets/snd/player_shoot.ogg"
+}

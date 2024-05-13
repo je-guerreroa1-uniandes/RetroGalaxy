@@ -3,14 +3,20 @@ import json
 import pygame
 import esper
 
-from src.create.prefab_creator import create_square, create_player, create_input_player
+from src.create.prefab_creator import cargar_nivel, create_bullet_square, create_player_bullet, create_square, create_player, create_input_player
 from src.ecs.components.c_input_command import CInputCommand, CommandPhase
 from src.ecs.components.c_surface import CSurface
 from src.ecs.components.c_transform import CTransform
 from src.ecs.components.c_velocity import CVelocity
 from src.ecs.systems.s_animation import system_animation
+from src.ecs.systems.s_bullet_screen_stop import system_bullet_screen_stop
+from src.ecs.systems.s_bulltet_collision import system_bullet_collision
+from src.ecs.systems.s_enemy_screen_bounce import system_enemy_screen_bounce
+from src.ecs.systems.s_enemy_shoot import system_enemy_shoot
+from src.ecs.systems.s_explosion_life import system_explosion_life
 from src.ecs.systems.s_input_player import system_input_player
 from src.ecs.systems.s_movement import system_movement
+from src.ecs.systems.s_player_screen_stop import system_player_stop
 from src.ecs.systems.s_rendering import system_rendering
 
 
@@ -43,7 +49,12 @@ class GameEngine:
             self.player_cfg = json.load(player_file)
         with open("assets/cfg/level_01_cfg.json") as level_01_file:
             self.level_01_cfg = json.load(level_01_file)
-        
+        with open("assets/cfg/bullet.json") as bullet_file:
+            self.bullet_cfg = json.load(bullet_file)
+        with open("assets/cfg/enemies.json") as enemies_file:
+            self.enemies_cfg = json.load(enemies_file)
+        with open("assets/cfg/explosion.json") as explosion_file:
+            self.explosion_cfg = json.load(explosion_file)
 
     async def run(self) -> None:
         self._create()
@@ -57,16 +68,13 @@ class GameEngine:
         self._clean()
 
     def _create(self):
-        create_square(self.ecs_world,
-                      pygame.Vector2(50, 50),
-                      pygame.Vector2(150, 100),
-                      pygame.Vector2(-100, 200),
-                      pygame.Color(255, 255, 100))
         self.player_entity = create_player(self.ecs_world, self.player_cfg, self.level_01_cfg.get("player_spawn"), self.screen)
         self.player_c_vel = self.ecs_world.component_for_entity(self.player_entity, CVelocity)
         self.player_c_t = self.ecs_world.component_for_entity(self.player_entity, CTransform)
         self.player_c_s = self.ecs_world.component_for_entity(self.player_entity, CSurface)
         create_input_player(self.ecs_world)
+
+        cargar_nivel(self.ecs_world, self.level_01_cfg, self.enemies_cfg, self.window_cfg)
 
 
     def _calculate_time(self):
@@ -75,15 +83,28 @@ class GameEngine:
 
     def _process_events(self):
         for event in pygame.event.get():
-            if event.type in [pygame.KEYDOWN, pygame.KEYUP]:
-                print(
-                    f"Key event detected: {pygame.key.name(event.key)} - {'Pressed' if event.type == pygame.KEYDOWN else 'Released'}")
+            #if event.type in [pygame.KEYDOWN, pygame.KEYUP]:
+            #    print(
+            #        f"Key event detected: {pygame.key.name(event.key)} - {'Pressed' if event.type == pygame.KEYDOWN else 'Released'}")
             system_input_player(self.ecs_world, event, self._do_action)
             if event.type == pygame.QUIT:
                 self.is_running = False
 
     def _update(self):
+
         system_movement(self.ecs_world, self.delta_time)
+
+        system_bullet_screen_stop(self.ecs_world, self.screen)
+        system_player_stop(self.ecs_world, self.screen, self.player_entity)
+
+        system_enemy_shoot(self.ecs_world, self.enemies_cfg, self.bullet_cfg)
+
+        system_enemy_screen_bounce(self.ecs_world, self.window_cfg)
+
+        system_bullet_collision(self.ecs_world, self.explosion_cfg, self.player_entity, self.screen)
+
+        system_explosion_life(self.ecs_world, self.delta_time)
+
         system_animation(self.ecs_world, self.delta_time)
         self.ecs_world._clear_dead_entities()
 
@@ -96,7 +117,7 @@ class GameEngine:
         pygame.quit()
 
     def _do_action(self, c_input: CInputCommand):
-        print(f"Action Triggered: {c_input.name}, Phase: {c_input.phase}")
+        #print(f"Action Triggered: {c_input.name}, Phase: {c_input.phase}")
         if c_input.name == "PLAYER_LEFT":
             if c_input.phase == CommandPhase.START:
                 self.player_c_vel.vel.x -= self.player_cfg.get("input_velocity")
@@ -109,19 +130,8 @@ class GameEngine:
             elif c_input.phase == CommandPhase.END:
                 self.player_c_vel.vel.x -= self.player_cfg.get("input_velocity")
 
-        if c_input.name == "PLAYER_UP":
-            if c_input.phase == CommandPhase.START:
-                self.player_c_vel.vel.y -= self.player_cfg.get("input_velocity")
-            elif c_input.phase == CommandPhase.END:
-                self.player_c_vel.vel.y += self.player_cfg.get("input_velocity")
-
-        if c_input.name == "PLAYER_DOWN":
-            if c_input.phase == CommandPhase.START:
-                self.player_c_vel.vel.y += self.player_cfg.get("input_velocity")
-            elif c_input.phase == CommandPhase.END:
-                self.player_c_vel.vel.y -= self.player_cfg.get("input_velocity")
-
         if c_input.name == "PLAYER_FIRE":
-            print("Player fired")
+            #print("Player fired")
+            create_player_bullet(self.ecs_world, self.bullet_cfg, self.player_entity)
 
 

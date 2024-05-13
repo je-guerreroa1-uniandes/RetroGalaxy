@@ -9,5 +9,10 @@
         "g": 0,
         "b": 0
     },
-    "framerate": 60
+    "framerate": 60,
+    "enemy_padding_x": 15,
+    "enemy_padding_y": 25,
+    "enemy_space_x": 13,
+    "enemy_space_y": 12
+    
 }
