@@ -5,6 +5,7 @@ from src.ecs.components.c_animation import CAnimation
 from src.ecs.components.c_explosion import CExplosion
 from src.ecs.components.c_input_command import CInputCommand
 from src.ecs.components.c_player_state import CPlayerState
+from src.ecs.components.c_star import CStar
 from src.ecs.components.c_surface import CSurface
 from src.ecs.components.c_transform import CTransform
 from src.ecs.components.c_velocity import CVelocity
@@ -217,3 +218,22 @@ def create_explosion(ecs_world:esper.World, pos:pygame.Vector2, explotion_data:d
     ServiceLocator.sounds_service.play(explotion_data["sound"])
 
     return explotion_entity
+
+def create_star(ecs_world:esper.World, star_data:dict, window_data:dict) -> int:
+
+    randSize = random.randint(star_data["size"]["min"], star_data["size"]["max"])
+    size = pygame.Vector2(randSize, randSize)
+
+    pos = pygame.Vector2(random.randint(0, window_data["size"]["w"]), 0)
+    vel = pygame.Vector2(0, random.randint(star_data["vertical_speed"]["min"], star_data["vertical_speed"]["max"]))
+    
+    col_data = star_data["star_colors"]
+    randPos = random.randint(0, len(col_data) - 1)
+
+    color = pygame.Color(col_data[randPos]["r"], col_data[randPos]["g"], col_data[randPos]["b"])
+
+    star_entity = crear_cuadrado(ecs_world, size, pos, vel, color)
+
+    ecs_world.add_component(star_entity, CStar(random.uniform(star_data["blink_rate"]["min"], star_data["blink_rate"]["max"]), color))
+
+    return star_entity

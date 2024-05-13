@@ -18,6 +18,9 @@ from src.ecs.systems.s_input_player import system_input_player
 from src.ecs.systems.s_movement import system_movement
 from src.ecs.systems.s_player_screen_stop import system_player_stop
 from src.ecs.systems.s_rendering import system_rendering
+from src.ecs.systems.s_star_blink import system_star_blink
+from src.ecs.systems.s_star_generator import system_star_generator
+from src.ecs.systems.s_star_stop import system_bullet_star_stop
 
 
 class GameEngine:
@@ -55,6 +58,8 @@ class GameEngine:
             self.enemies_cfg = json.load(enemies_file)
         with open("assets/cfg/explosion.json") as explosion_file:
             self.explosion_cfg = json.load(explosion_file)
+        with open("assets/cfg/starfield.json") as starfield_file:
+            self.starfield_cfg = json.load(starfield_file)
 
     async def run(self) -> None:
         self._create()
@@ -95,6 +100,7 @@ class GameEngine:
         system_movement(self.ecs_world, self.delta_time)
 
         system_bullet_screen_stop(self.ecs_world, self.screen)
+        system_bullet_star_stop(self.ecs_world, self.screen)
         system_player_stop(self.ecs_world, self.screen, self.player_entity)
 
         system_enemy_shoot(self.ecs_world, self.enemies_cfg, self.bullet_cfg)
@@ -105,6 +111,9 @@ class GameEngine:
 
         system_explosion_life(self.ecs_world, self.delta_time)
 
+        system_star_generator(self.ecs_world, self.starfield_cfg, self.window_cfg)
+
+        system_star_blink(self.ecs_world, self.delta_time)
         system_animation(self.ecs_world, self.delta_time)
         self.ecs_world._clear_dead_entities()
 
