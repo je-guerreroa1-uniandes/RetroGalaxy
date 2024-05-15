@@ -3,7 +3,9 @@ import pygame
 import esper
 from src.ecs.components.c_animation import CAnimation
 from src.ecs.components.c_explosion import CExplosion
+from src.ecs.components.c_game_state import CGameState
 from src.ecs.components.c_input_command import CInputCommand
+from src.ecs.components.c_message import CMessage
 from src.ecs.components.c_player_state import CPlayerState
 from src.ecs.components.c_star import CStar
 from src.ecs.components.c_surface import CSurface
@@ -11,6 +13,7 @@ from src.ecs.components.c_transform import CTransform
 from src.ecs.components.c_velocity import CVelocity
 from src.ecs.components.tags.c_tag_bullet import CTagBullet
 from src.ecs.components.tags.c_tag_enemy import CTagEnemy
+from src.ecs.components.tags.c_tag_message_pause import CTagMessagePause
 from src.ecs.components.tags.c_tag_player import CTagPlayer
 from src.engine.service_locator import ServiceLocator
 
@@ -64,8 +67,12 @@ def create_sprite(ecs_world:esper.World, pos:pygame.Vector2, vel:pygame.Vector2,
 
     return sprite_entity
 
-# crear espesificos
+# crear específicos
 
+def create_game_entity(world: esper.World) -> int:
+    game_entity = world.create_entity()
+    world.add_component(game_entity, CGameState())
+    return game_entity
 
 def create_explosion(ecs_world:esper.World, pos:pygame.Vector2, explotion_data:dict) -> int:
 
@@ -157,6 +164,8 @@ def create_player_bullet(ecs_world:esper.World, bullet_data:dict, player_entity:
 
     ServiceLocator.sounds_service.play(bullet_data["sound"])
 
+    return bullet_entity
+
 def create_enemy_bullet(ecs_world:esper.World, bullet_data:dict, enemy_entity:int) -> int:
 
     bullets = ecs_world.get_component(CTagBullet)
@@ -237,3 +246,68 @@ def create_star(ecs_world:esper.World, star_data:dict, window_data:dict) -> int:
     ecs_world.add_component(star_entity, CStar(random.uniform(star_data["blink_rate"]["min"], star_data["blink_rate"]["max"]), color))
 
     return star_entity
+
+def create_pause_message(world: esper.World, screen: pygame.Surface,
+                         pause_cfg: dict, padding: int = 10):
+    # Define text color
+    fore_color = (255, 255, 255)  # White
+
+    # Load the font
+    # font = pygame.font.Font(pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size"))
+    font = ServiceLocator.fonts_service.get(pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size"))
+
+    # Render the text
+    text_surface = font.render(pause_cfg.get("message").get("un_paused"), True, fore_color)
+
+    # Get the size of the text
+    text_width, text_height = text_surface.get_size()
+
+    # Calculate the position based on the bottom right of the screen with padding
+    position = pygame.Vector2(screen.get_width() - text_width - padding, screen.get_height() - text_height - padding)
+
+    # Create CSurface and CTransform components
+    text_surface_component = CSurface.from_surface(text_surface)
+    text_transform_component = CTransform(position)
+
+    # Create an entity and add components to it
+    message_entity = world.create_entity()
+    world.add_component(message_entity, text_surface_component)
+    world.add_component(message_entity, text_transform_component)
+    world.add_component(message_entity, CMessage(pause_cfg.get("message"), pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size")))
+    world.add_component(message_entity, CTagMessagePause())
+
+    return message_entity
+
+
+def create_unpause_message(world: esper.World, screen: pygame.Surface, pause_cfg: dict):
+    # Define text color
+    fore_color = (pause_cfg.get("font").get("color").get("r"), pause_cfg.get("font").get("color").get("g"), pause_cfg.get("font").get("color").get("b")) #(255, 255, 255)  # White
+
+    # Load the font
+    # font = pygame.font.Font(pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size"))
+    font = ServiceLocator.fonts_service.get(pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size"))
+
+    screen_rect = screen.get_rect()
+
+    # Render the text
+    text_surface = font.render(pause_cfg.get("message").get("paused"), True, fore_color)
+
+    text_rect = text_surface.get_rect()
+
+    # Center the text horizontally
+    text_rect.centerx = screen_rect.centerx
+    text_rect.centery = screen_rect.centery
+
+    # Create the surface and transform components for the text
+    text_surface_component = CSurface.from_surface(text_surface)
+    text_transform_component = CTransform(pygame.Vector2(text_rect.x, text_rect.y))
+
+    # Add the components to the entity
+    message_entity = world.create_entity()
+    world.add_component(message_entity, text_surface_component)
+    world.add_component(message_entity, text_transform_component)
+    world.add_component(message_entity, CMessage(pause_cfg.get("message").get("paused"), pause_cfg.get("font").get("path"),
+                                                 pause_cfg.get("font").get("size")))
+    world.add_component(message_entity, CTagMessagePause())
+
+    return message_entity
