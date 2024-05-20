@@ -11,6 +11,9 @@ from src.ecs.components.c_star import CStar
 from src.ecs.components.c_surface import CSurface
 from src.ecs.components.c_transform import CTransform
 from src.ecs.components.c_velocity import CVelocity
+
+from src.ecs.components.c_alien import CAlien, AlienState
+
 from src.ecs.components.tags.c_tag_bullet import CTagBullet
 from src.ecs.components.tags.c_tag_enemy import CTagEnemy
 from src.ecs.components.tags.c_tag_message_pause import CTagMessagePause
@@ -193,6 +196,7 @@ def crear_enemigo(ecs_world:esper.World, pos:pygame.Vector2, enemyData:dict, ene
     hunter_entity = create_sprite(ecs_world, position, pygame.Vector2(enemyData["velocity"], 0), enemy_surface)
 
     ecs_world.add_component(hunter_entity, CTagEnemy("space"))
+    ecs_world.add_component(hunter_entity, CAlien(position, enemyData["velocity"]))
     ecs_world.add_component(hunter_entity, CAnimation(enemyData[enemy_type]["animations"]))
 
 def cargar_nivel(ecs_world:esper.World, level_data:dict, enemy_data:dict, window_data:dict):

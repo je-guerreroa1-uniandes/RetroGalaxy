@@ -16,7 +16,7 @@ def system_enemy_shoot(world: esper.World, enemyData: dict, bulletData: dict):
     surface:CSurface
     for entity, (transform, velocity, surface, enemy) in components:
 
-        random_number = random.randint(0, enemyData["probability"])
+        random_number = random.randint(0, enemyData["probability_bullet"])
 
         if random_number == 0:
             create_enemy_bullet(world, bulletData, entity)

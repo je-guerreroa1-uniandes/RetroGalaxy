@@ -1,6 +1,9 @@
 {
     "velocity": 20,
-    "probability": 1000,
+    "probability_bullet": 1000,
+    "probability_jump": 10000,
+    "jump_distance": 50,
+    "chase_velocity": 50,
     "enemy1": {
         "sound": "assets/snd/enemy_die.ogg",
         "image": "assets/img/invaders_enemy_01.png",
