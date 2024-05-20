@@ -55,6 +55,7 @@ def crear_texto(ecs_world:esper.World, text:str, pos:pygame.Vector2, color: pyga
 
     ecs_world.add_component(entity, CTransform(pos))
     ecs_world.add_component(entity, CSurface.from_text(text, font, color))
+    ecs_world.add_component(entity, CMessage())
 
     return entity
 
@@ -104,6 +105,7 @@ def create_player(world: esper.World, player_info: dict, player_lvl_info: dict, 
             player_lvl_info["position"]["x"] - (size[0] / 2),
             player_lvl_info["position"]["y"] - (size[1] / 2)
         )
+    print(pos)
 
     vel = pygame.Vector2(0, 0)
 
@@ -251,6 +253,7 @@ def create_star(ecs_world:esper.World, star_data:dict, window_data:dict) -> int:
 
     return star_entity
 
+# NA
 def create_pause_message(world: esper.World, screen: pygame.Surface,
                          pause_cfg: dict, padding: int = 10):
     # Define text color
@@ -277,7 +280,7 @@ def create_pause_message(world: esper.World, screen: pygame.Surface,
     message_entity = world.create_entity()
     world.add_component(message_entity, text_surface_component)
     world.add_component(message_entity, text_transform_component)
-    world.add_component(message_entity, CMessage(pause_cfg.get("message"), pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size")))
+    world.add_component(message_entity, CMessage())
     world.add_component(message_entity, CTagMessagePause())
 
     return message_entity
@@ -310,8 +313,93 @@ def create_unpause_message(world: esper.World, screen: pygame.Surface, pause_cfg
     message_entity = world.create_entity()
     world.add_component(message_entity, text_surface_component)
     world.add_component(message_entity, text_transform_component)
-    world.add_component(message_entity, CMessage(pause_cfg.get("message").get("paused"), pause_cfg.get("font").get("path"),
-                                                 pause_cfg.get("font").get("size")))
+    world.add_component(message_entity, CMessage())
+    world.add_component(message_entity, CTagMessagePause())
+
+    return message_entity
+
+def create_level_info(world: esper.World, screen: pygame.Surface):
+    level_data = ServiceLocator.data_service.get_data()
+
+    red = pygame.Color(255, 0, 0)
+    white = pygame.Color(255, 255, 255)
+
+
+    centro = screen.get_width() / 2 - 50
+
+    # Puntaje
+    crear_texto(world, "1UP", pygame.Vector2(10, 10), red, 2)
+    crear_texto(world, str(level_data["points"]), pygame.Vector2(10, 30), white, 2)
+
+    # Max
+    crear_texto(world, "HI-SCORE", pygame.Vector2(centro, 10), red, 2)
+    crear_texto(world, str(level_data["record"]), pygame.Vector2(centro, 30), white, 2)
+
+    # Level
+
+    # Vidas
+    pass
+
+def create_start_message(world: esper.World, screen: pygame.Surface, pause_cfg: dict):
+    # Define text color
+    fore_color = (pause_cfg.get("font").get("color").get("r"), pause_cfg.get("font").get("color").get("g"), pause_cfg.get("font").get("color").get("b")) #(255, 255, 255)  # White
+
+    # Load the font
+    # font = pygame.font.Font(pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size"))
+    font = ServiceLocator.fonts_service.get(pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size"))
+
+    screen_rect = screen.get_rect()
+
+    # Render the text
+    text_surface = font.render("GAME START", True, fore_color)
+
+    text_rect = text_surface.get_rect()
+
+    # Center the text horizontally
+    text_rect.centerx = screen_rect.centerx
+    text_rect.centery = screen_rect.centery
+
+    # Create the surface and transform components for the text
+    text_surface_component = CSurface.from_surface(text_surface)
+    text_transform_component = CTransform(pygame.Vector2(text_rect.x, text_rect.y))
+
+    # Add the components to the entity
+    message_entity = world.create_entity()
+    world.add_component(message_entity, text_surface_component)
+    world.add_component(message_entity, text_transform_component)
+    world.add_component(message_entity, CMessage())
+    world.add_component(message_entity, CTagMessagePause())
+
+    return message_entity
+
+def create_end_message(world: esper.World, screen: pygame.Surface, pause_cfg: dict):
+    # Define text color
+    fore_color = (pause_cfg.get("font").get("color").get("r"), pause_cfg.get("font").get("color").get("g"), pause_cfg.get("font").get("color").get("b")) #(255, 255, 255)  # White
+
+    # Load the font
+    # font = pygame.font.Font(pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size"))
+    font = ServiceLocator.fonts_service.get(pause_cfg.get("font").get("path"), pause_cfg.get("font").get("size"))
+
+    screen_rect = screen.get_rect()
+
+    # Render the text
+    text_surface = font.render("GAME OVER", True, fore_color)
+
+    text_rect = text_surface.get_rect()
+
+    # Center the text horizontally
+    text_rect.centerx = screen_rect.centerx
+    text_rect.centery = screen_rect.centery
+
+    # Create the surface and transform components for the text
+    text_surface_component = CSurface.from_surface(text_surface)
+    text_transform_component = CTransform(pygame.Vector2(text_rect.x, text_rect.y))
+
+    # Add the components to the entity
+    message_entity = world.create_entity()
+    world.add_component(message_entity, text_surface_component)
+    world.add_component(message_entity, text_transform_component)
+    world.add_component(message_entity, CMessage())
     world.add_component(message_entity, CTagMessagePause())
 
     return message_entity

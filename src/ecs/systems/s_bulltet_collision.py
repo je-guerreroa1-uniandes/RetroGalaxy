@@ -5,10 +5,17 @@ from src.ecs.components.c_surface import CSurface
 from src.ecs.components.c_transform import CTransform
 from src.ecs.components.tags.c_tag_enemy import CTagEnemy
 from src.ecs.components.tags.c_tag_bullet import CTagBullet
+from src.ecs.components.c_game_state import  GameState
+from src.engine.service_locator import ServiceLocator
 
 def system_bullet_collision(world: esper.World, explosion_data: dict, player_entity: int, screen: pygame.Surface):
     enemies = world.get_components(CSurface, CTransform, CTagEnemy)
     bullets = world.get_components(CSurface, CTransform, CTagBullet)
+
+    ret = False
+
+    if len(enemies) == 0:
+        return GameState.CHANGE_LEVEL
 
     for bullet_entity, (bullet_surface, bullet_transform, bullet_tag) in bullets:
 
@@ -26,6 +33,7 @@ def system_bullet_collision(world: esper.World, explosion_data: dict, player_ent
                     create_explosion(world, enemy_transform.pos, explosion_data["enemy"], "enemy")
                     world.delete_entity(bullet_entity)
                     world.delete_entity(enemy_entity)
+                    ServiceLocator.data_service.add_points(100)
                     
         
         elif bullet_tag.type == "enemy":
@@ -42,5 +50,12 @@ def system_bullet_collision(world: esper.World, explosion_data: dict, player_ent
                 create_explosion(world, pos_copy, explosion_data["player"], "player")
                 world.delete_entity(bullet_entity)
                 player_transform.pos.x = (screen.get_width() / 2) - (player_surface.area.width / 2)
-                
+                ret = True
+
+    if ret:
+        return GameState.DIED
+    else:
+        return GameState.UNPAUSED
+        
+
                 

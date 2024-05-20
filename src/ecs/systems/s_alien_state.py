@@ -12,7 +12,10 @@ from src.engine.service_locator import ServiceLocator
 def system_alien_state(world:esper.World, player_entity: int, enemy_data:dict, window_data:dict) -> None:
     components = world.get_components(CAlien, CTransform, CVelocity)
 
-    pl_transfotm = world.component_for_entity(player_entity, CTransform)
+    try:
+        pl_transfotm = world.component_for_entity(player_entity, CTransform)
+    except:
+        pl_transfotm = CTransform(pygame.Vector2(320, 180))
 
     for _, (alien, transform, velocity) in components:
         

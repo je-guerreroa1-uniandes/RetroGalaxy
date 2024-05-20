@@ -7,7 +7,7 @@ def system_explosion_life(world:esper.World, deltatime: float):
     explotion:CExplosion
     for entity, (explotion) in components:
         explotion.timeAlive += deltatime
-        if explotion.source == "player" and explotion.timeAlive >= 0.6:
+        if explotion.source == "player" and explotion.timeAlive >= 0.1:
             world.delete_entity(entity)
         elif explotion.source == "enemy" and explotion.timeAlive >= 0.3:
             world.delete_entity(entity)
