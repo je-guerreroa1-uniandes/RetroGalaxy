@@ -23,6 +23,7 @@ from src.ecs.systems.s_input_player import system_input_player
 from src.ecs.systems.s_movement import system_movement
 from src.ecs.systems.s_player_screen_stop import system_player_stop
 from src.ecs.systems.s_rendering import system_rendering
+from src.ecs.systems.s_restart import system_reset
 from src.ecs.systems.s_star_blink import system_star_blink
 from src.ecs.systems.s_star_generator import system_star_generator
 from src.ecs.systems.s_star_stop import system_bullet_star_stop
@@ -134,10 +135,12 @@ class GameEngine:
 
         if self.game_st.state == GameState.PAUSED:
             create_unpause_message(self.ecs_world, self.screen, self.pause_cfg)
+            system_explosion_life(self.ecs_world, self.delta_time)
 
         if self.game_st.state == GameState.DIED:
 
             system_enemy_screen_bounce(self.ecs_world, self.window_cfg)
+            system_explosion_life(self.ecs_world, self.delta_time)
 
             system_movement(self.ecs_world, self.delta_time)
             system_update_posObj(self.ecs_world, self.delta_time)
@@ -179,7 +182,20 @@ class GameEngine:
 
         if self.game_st.state == GameState.OVER:
             create_end_message(self.ecs_world, self.screen, self.pause_cfg)
+            system_explosion_life(self.ecs_world, self.delta_time)
             self.player_c_t.pos = pygame.Vector2(126.125, 214)
+
+            ServiceLocator.data_service.time_reset += self.delta_time
+            
+            if ServiceLocator.data_service.time_reset > 3:
+                self.game_st.state = GameState.START
+                ServiceLocator.data_service.restart()
+                ServiceLocator.data_service.time_reset = 0
+                system_reset(self.ecs_world)
+
+                cargar_nivel(self.ecs_world, self.level_01_cfg, self.enemies_cfg, self.window_cfg)
+                
+                
 
 
         

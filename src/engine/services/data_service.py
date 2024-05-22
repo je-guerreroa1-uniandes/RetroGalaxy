@@ -3,15 +3,21 @@ class DataService:
         self._points = 0
         self.lives = 3
         self._level = 1
-        self._record = 5000
+        self._record = 500
 
         self.time_start = 0
         self.time_death = 0
+        self.time_reset = 0
 
     def add_points(self, points:int):
         self._points += points
         if self._points > self._record:
             self._record = self._points
+
+    def restart(self):
+        self._points = 0
+        self.lives = 3
+        self._level = 1
     
     def kill_player(self):
         self.lives -= 1
