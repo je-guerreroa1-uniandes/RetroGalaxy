@@ -3,7 +3,7 @@ class DataService:
         self._points = 0
         self.lives = 3
         self._level = 1
-        self._record = 500
+        self._record = 5000
 
         self.time_start = 0
         self.time_death = 0
