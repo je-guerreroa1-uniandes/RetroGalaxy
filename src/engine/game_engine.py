@@ -123,7 +123,7 @@ class GameEngine:
             system_bullet_star_stop(self.ecs_world, self.screen)
             system_player_stop(self.ecs_world, self.screen, self.player_entity)
 
-            #system_enemy_shoot(self.ecs_world, self.enemies_cfg, self.bullet_cfg)
+            system_enemy_shoot(self.ecs_world, self.enemies_cfg, self.bullet_cfg)
 
             system_alien_state(self.ecs_world, self.player_entity, self.enemies_cfg, self.window_cfg)
 
@@ -180,10 +180,11 @@ class GameEngine:
 
         if self.game_st.state == GameState.OVER:
             create_end_message(self.ecs_world, self.screen, self.pause_cfg)
+            self.player_c_t.pos = pygame.Vector2(126.125, 214)
 
 
         
-        create_level_info(self.ecs_world, self.screen)
+        create_level_info(self.ecs_world, self.screen, self.player_cfg)
         system_star_blink(self.ecs_world, self.delta_time)
         system_animation(self.ecs_world, self.delta_time)
         self.ecs_world._clear_dead_entities()

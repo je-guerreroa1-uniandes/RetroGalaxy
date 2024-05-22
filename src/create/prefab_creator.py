@@ -105,7 +105,7 @@ def create_player(world: esper.World, player_info: dict, player_lvl_info: dict, 
             player_lvl_info["position"]["x"] - (size[0] / 2),
             player_lvl_info["position"]["y"] - (size[1] / 2)
         )
-    print(pos)
+    #print(pos)
 
     vel = pygame.Vector2(0, 0)
 
@@ -318,27 +318,54 @@ def create_unpause_message(world: esper.World, screen: pygame.Surface, pause_cfg
 
     return message_entity
 
-def create_level_info(world: esper.World, screen: pygame.Surface):
+def create_level_info(world: esper.World, screen: pygame.Surface, player_info: dict):
     level_data = ServiceLocator.data_service.get_data()
 
     red = pygame.Color(255, 0, 0)
     white = pygame.Color(255, 255, 255)
 
 
-    centro = screen.get_width() / 2 - 50
+    centro = screen.get_width() / 2 - 40
 
     # Puntaje
-    crear_texto(world, "1UP", pygame.Vector2(10, 10), red, 2)
-    crear_texto(world, str(level_data["points"]), pygame.Vector2(10, 30), white, 2)
+    crear_texto(world, "1UP", pygame.Vector2(10, 1), red, 8)
+    crear_texto(world, str(level_data["points"]), pygame.Vector2(10, 10), white, 8)
 
     # Max
-    crear_texto(world, "HI-SCORE", pygame.Vector2(centro, 10), red, 2)
-    crear_texto(world, str(level_data["record"]), pygame.Vector2(centro, 30), white, 2)
+    crear_texto(world, "HI-SCORE", pygame.Vector2(centro, 1), red, 8)
+    crear_texto(world, str(level_data["record"]), pygame.Vector2(centro, 10), white, 8)
 
     # Level
 
+    flag_sprite = ServiceLocator.images_service.get("assets/img/invaders_level_flag.png")
+    size = flag_sprite.get_size()
+    vel = pygame.Vector2(0, 0)
+
+    if level_data["level"] <= 3:
+        for x in range(level_data["level"]):
+            pos = pygame.Vector2(screen.get_width() + (size[0] * x) - 50, 3)
+            flag_entity = create_sprite(world, pos, vel, flag_sprite)
+            world.add_component(flag_entity, CMessage())
+    else:
+
+        pos = pygame.Vector2(screen.get_width()  - 50, 3)
+        flag_entity = create_sprite(world, pos, vel, flag_sprite)
+        world.add_component(flag_entity, CMessage())
+
+        crear_texto(world, str(level_data["level"]), pygame.Vector2(screen.get_width() - 35, 8), white, 8)
+
     # Vidas
-    pass
+
+    player_sprite = ServiceLocator.images_service.get(player_info["image"])
+    player_sprite = pygame.transform.scale(player_sprite, (player_sprite.get_width() // 2, player_sprite.get_height() // 2))
+    size = player_sprite.get_size()
+    vel = pygame.Vector2(0, 0)
+
+    for x in range(level_data["lives"]):
+        pos = pygame.Vector2(screen.get_width() / 2 + (size[0] * x) + 30, 10)
+        player_entity = create_sprite(world, pos, vel, player_sprite)
+        world.add_component(player_entity, CMessage())
+
 
 def create_start_message(world: esper.World, screen: pygame.Surface, pause_cfg: dict):
     # Define text color
